@@ -18,6 +18,51 @@ firebase.initializeApp(config);
 this.database = firebase.database().ref().child('Liked');
 
 
+app.get('/api/liked/:userId', (req, res) => {
+  const owner = req.params.userId;
+  var value = [];
+  var movieRows = [];
+  //GET LIKED MOVIES ID
+  this.database.orderByChild("owner").equalTo(owner).on('value', (snapshot) => {
+    //LOOPING EACH CHILD AND PUSHING TO ARRAY
+    snapshot.forEach(item => {
+      const temp = item.val();
+      value.push(temp);
+    });
+
+    for (var i = 0; i < value.length; i++) {
+      var urlString2 = "https://api.themoviedb.org/3/movie/" + value[i].movieID + "?api_key=60a27eb65f7bfc6491658e507c3c57ec&language=en-US"
+      request({
+        url: urlString2, json: true
+      }, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+          movieRows.push(body)
+        }
+      })
+    }//for loop end
+  })//DB END
+  // time out to collect data.
+  setTimeout(() => {
+  res.json(movieRows);
+  }, 1000);
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/api/search/:title', (req, res) => {
   const title = req.params.title;
   const url = "https://api.themoviedb.org/3/search/movie?api_key=60a27eb65f7bfc6491658e507c3c57ec&language=en-US&query=" + title
@@ -30,14 +75,6 @@ app.get('/api/search/:title', (req, res) => {
     }
   })
 });
-
-
-
-
-
-
-
-
 
 
 var port = process.env.PORT || 3000;
