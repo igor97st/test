@@ -18,6 +18,21 @@ firebase.initializeApp(config);
 this.database = firebase.database().ref().child('Liked');
 
 
+app.get('/api/search/:title', (req, res) => {
+  const title = req.params.title;
+  const url = "https://api.themoviedb.org/3/search/movie?api_key=60a27eb65f7bfc6491658e507c3c57ec&language=en-US&query=" + title
+  request({
+    url: url,
+    json: true
+  }, function (error, response, body) {
+    if (!error && response.statusCode === 200) {
+      res.json(body.results);
+    }
+  })
+});
+
+
+
 
 
 
