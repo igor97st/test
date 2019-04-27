@@ -192,25 +192,6 @@ app.get('/api/top', (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 app.get('/api/liked/:userId', (req, res) => {
   const owner = req.params.userId;
   var value = [];
@@ -255,9 +236,10 @@ app.get('/api/search/:title', (req, res) => {
 
 
 var port = process.env.PORT || 3000;
+
 app.get('/', (req,res) => res.send("hello!"));
 
-app.get('/api/upc', (req, res) => {
+app.get('/api/upcoming', (req, res) => {
   const url = "https://api.themoviedb.org/3/movie/upcoming?api_key=60a27eb65f7bfc6491658e507c3c57ec&language=en-US&page=1"
   request({
     url: url,
