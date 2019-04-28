@@ -2,9 +2,7 @@ const express = require('express');
 const app = express();
 var request = require("request")
 
-
-
-
+// set up firebase settings
 var firebase = require("firebase")
 const config = {
   apiKey: "AIzaSyC6gQtGID3OKTFfiO4YBfLGliQ6_v9tb8A",
@@ -16,8 +14,9 @@ const config = {
 };
 firebase.initializeApp(config);
 this.database = firebase.database().ref().child('Liked');
+//
 
-
+// Modify access controll protocols to allow access. 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header(
@@ -31,6 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Find movies to recommend
 app.get('/api/recommend/:userId', (req, res) => {
   var owner = req.params.userId;
   var user = [];
@@ -128,6 +128,8 @@ app.get('/api/recommend/:userId', (req, res) => {
     }
   }, 4000);
 });
+
+// Find top 5 movies
 app.get('/api/top', (req, res) => {
   //get all liked movies from DB
   var all = [];
@@ -280,7 +282,7 @@ function genreFilter(tempRows, genre){
         // SAVE UNIQE GENRES TO THE LIST
         if (genre.includes(movie.genres[i].id) === false) {
           genre.push(movie.genres[i].id)
-          console.log(genre);
+          
         }
       }
     })
