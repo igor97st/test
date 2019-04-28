@@ -55,36 +55,35 @@ app.get('/api/recommend/:userId', (req, res) => {
     });
   })
   // LOOP FOR THIS USER
-    for (var a = 0; a < user.length; a++) {
-      //LOOP FOR ALL USERS
-      for (var i = 0; i < all.length; i++) {
-        // IF SAME MOVIE ID
-        if (all[i].movieID === user[a].movieID) {
-          // SEE IF ITS THE SAME USER
-          if (all[i].owner === user[a].owner) {
-            // IGNORE THE SAME USER
-          } else {
-            // GET DATA FOR SPECIFIC USER
-            var specificUser = [];
-            this.database.orderByChild("owner").equalTo(all[i].owner).on('value', (snapshot) => {
-              snapshot.forEach(item => {
-                const temp = item.val();
-                specificUser.push(temp.movieID);
-              });
-            })
-            console.log(id)
-            // ADD SPECIFIC USERS MOVIE IDS TO THE LIST IF THEY ARE NEW
-              for (var s = 0; s < specificUser.length; s++) {
-                // SEE IF USER LIKED IT AND IF TEMP HAS IT ALREADY
-                if (id.includes(specificUser[s]) === false & temp.includes(specificUser[s]) === false) {
-                  temp.push(specificUser[s])
-                  
-                }
-              }
+  for (var a = 0; a < user.length; a++) {
+    //LOOP FOR ALL USERS
+    for (var i = 0; i < all.length; i++) {
+      // IF SAME MOVIE ID
+      if (all[i].movieID === user[a].movieID) {
+        // SEE IF ITS THE SAME USER
+        if (all[i].owner === user[a].owner) {
+          // IGNORE THE SAME USER
+        } else {
+          // GET DATA FOR SPECIFIC USER
+          var specificUser = [];
+          this.database.orderByChild("owner").equalTo(all[i].owner).on('value', (snapshot) => {
+            snapshot.forEach(item => {
+              const temp = item.val();
+              specificUser.push(temp.movieID);
+            });
+          })
+          // ADD SPECIFIC USERS MOVIE IDS TO THE LIST IF THEY ARE NEW
+          for (var s = 0; s < specificUser.length; s++) {
+            // SEE IF USER LIKED IT AND IF TEMP HAS IT ALREADY
+            if (id.includes(specificUser[s]) === false & temp.includes(specificUser[s]) === false) {
+              temp.push(specificUser[s])
+
+            }
           }
         }
       }
     }
+  }
   //GET DATA FOR MOVIES
   setTimeout(() => {
     for (var d = 0; d < temp.length; d++) {
@@ -98,33 +97,60 @@ app.get('/api/recommend/:userId', (req, res) => {
       })
     }
   }, 2000);
-  // CHECK RESULTS IF > 10 THEN USE GENRES TO FILTER.
+
   setTimeout(() => {
-    if (movieRows.length < 10) {
-      // IF LESS THEN 10 RETURN ALL.
-      res.json(movieRows);
+    //IF NONE TO RECOMENDED SHOW CINEMA MOVIES
+    console.log(temp.length);
+    if (temp.length < 1) {
+      const url = "https://api.themoviedb.org/3/movie/now_playing?api_key=60a27eb65f7bfc6491658e507c3c57ec&language=en-US&page=1"
+      request({
+        url: url,
+        json: true
+      }, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+          res.json(body.results);
+        }
+      });
     } else {
+      if (temp.length < 10) {
+        res.json(movieRows);
+      } else {
+        // IF TOO MANY MOVIES THEN SORT BY GENRE
+        // CREATE NEW ARRAY TO HOLD UNIQUE GENRES
+        // userMovies to get genres
+        var genre = [];
+        var userMovies = [];
 
-      // IF TOO MANY MOVIES THEN SORT BY GENRE
-      // CREATE NEW ARRAY TO HOLD UNIQUE GENRES
-      genre = [];  
-      // METHOD TO SAVE UNIQE GENRES
-      genreFilter(movieRows, genre);
-
-      // FOR MOVIES OTHER USERS LIKED CHECK GENRES
-      setTimeout(() => {
-        movieRows.forEach((movie) => {
-          for (var i = 0; i < movie.genres.length; i++) {
-            // SEE IF GENRES MATCH AND MOVIE IS UNIQUE
-            if (genre.includes(movie.genres[i].id) === true & results.includes(movie) === false & results.length < 21 === true) {
-              results.push(movie)
+        //GET DATA FOR GENRES
+        for (var d = 0; d < id.length; d++) {
+          var urlString2 = "https://api.themoviedb.org/3/movie/" + id[d] + "?api_key=60a27eb65f7bfc6491658e507c3c57ec&language=en-US"
+          request({
+            url: urlString2, json: true
+          }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+              userMovies.push(body)
             }
-          }
-        })
-      }, 1000);
-      setTimeout(() => {
-        res.json(results);
-      }, 3000);
+          })
+        }
+        setTimeout(() => {
+          genreFilter(userMovies, genre);
+        }, 1000);
+
+        // FOR MOVIES OTHER USERS LIKED CHECK GENRES
+        setTimeout(() => {
+          movieRows.forEach((movie) => {
+            for (var i = 0; i < movie.genres.length; i++) {
+              // SEE IF GENRES MATCH AND MOVIE IS UNIQUE
+              if (genre.includes(movie.genres[i].id) === true & results.includes(movie) === false & results.length < 21 === true) {
+                results.push(movie)
+              }
+            }
+          })
+        }, 2000);
+        setTimeout(() => {
+          res.json(results);
+        }, 3000);
+      }
     }
   }, 4000);
 });
